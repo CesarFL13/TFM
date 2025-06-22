@@ -360,33 +360,18 @@ def callback(x):
 
 # Función que calcula el valor de la energía libre.
 def free_energy(x, ansatz_U, beta, m, H_q, H_int_q, shots=None, sort_index=None ,cllbck = None):
-    with FileLock('./log2.lock'):
-            with open('./log2.dat','a') as file:
-                np.savetxt(file,[8,time.time()])
-                file.flush()
+
     U_bound = ansatz_U.assign_parameters(x) # Dado un vector de parámetros, los asigna al operador unitario equivalente al circuito.
-    with FileLock('./log2.lock'):
-            with open('./log2.dat','a') as file:
-                np.savetxt(file,[9,time.time()])
-                file.flush()
+
     U_matrix = Operator(U_bound).data # Obtenemos la matriz de este operador.
-    with FileLock('./log2.lock'):
-            with open('./log2.dat','a') as file:
-                np.savetxt(file,[10,time.time()])
-                file.flush()
+
     # Obtenemos las energías como el valor esperado de H en el circuito que aplica U para cada vector de la base computacional.
     n=len(U_matrix)
     N_sites=int(np.log2(n))
     H_matrix = H_q.to_matrix()
-    with FileLock('./log2.lock'):
-            with open('./log2.dat','a') as file:
-                np.savetxt(file,[11,time.time()])
-                file.flush()
+
     obs=H_q
-    with FileLock('./log2.lock'):
-            with open('./log2.dat','a') as file:
-                np.savetxt(file,[12,time.time()])
-                file.flush()
+
     
     
 
@@ -406,47 +391,25 @@ def free_energy(x, ansatz_U, beta, m, H_q, H_int_q, shots=None, sort_index=None 
         # Para calcular el valor esperado, necesitamos el Estimator.
         estimator = Estimator(options={"shots": shots})
         Energies=np.zeros(m)
-        with FileLock('./log2.lock'):
-            with open('./log2.dat','a') as file:
-                np.savetxt(file,[15,time.time()])
-                file.flush()
+
         for i in range(m):
             # Construimos el circuito
             qc=QuantumCircuit(N_sites)
-            with FileLock('./log2.lock'):
-                with open('./log2.dat','a') as file:
-                    np.savetxt(file,[15.1,time.time()])
-                    file.flush()
+
             if sort_index is None:
                 qc.initialize(i)
             else:
                 qc.initialize(int(sort_index[i]))
-            with FileLock('./log2.lock'):
-                with open('./log2.dat','a') as file:
-                    np.savetxt(file,[15.2,time.time()])
-                    file.flush()
+
             qc=qc.compose(U_bound)
-            with FileLock('./log2.lock'):
-                with open('./log2.dat','a') as file:
-                    np.savetxt(file,[15.3,time.time()])
-                    file.flush()
+
             job = estimator.run(qc,obs)
-            with FileLock('./log2.lock'):
-                with open('./log2.dat','a') as file:
-                    np.savetxt(file,[15.4,time.time()])
-                    file.flush()
+
 
             # Las energías se corresponden con los valores del observable para cada circuito.
             Energies[i]=job.result().values[0]
-            with FileLock('./log2.lock'):
-                with open('./log2.dat','a') as file:
-                    np.savetxt(file,[15.5,time.time()])
-                    file.flush()
 
-    with FileLock('./log2.lock'):
-            with open('./log2.dat','a') as file:
-                np.savetxt(file,[16,time.time()])
-                file.flush()        
+       
     # Obtenemos el valor de la energía libre.
     energia_libre=-sum(np.exp(-beta*Energies))/beta
     
@@ -487,10 +450,6 @@ def minimize_function(H, function, betas,shots=None, layers=1, method=None):
     # Transformamos la descomposición obtenida a operadores fermiónicos mediante una Jordan-Wigner inversa.
     fermionic_op= reverse_map(H)
 
-    with FileLock('./log2.lock'):
-        with open('./log2.dat','w') as file:
-            np.savetxt(file,[1,time.time()])
-            file.flush()
 
     # Creamos la matriz que guardará los coeficientes de la parte cuadrática del operador fermiónico. 
     num_spin_orbitals = fermionic_op.num_spin_orbitals
@@ -510,11 +469,6 @@ def minimize_function(H, function, betas,shots=None, layers=1, method=None):
                 h1[indices[1], indices[0]] -= coeff  # Cambiar el signo del coeficiente
         elif term.count('+')==0 and term.count('-') == 0:
             cte+=coeff
-
-    with FileLock('./log2.lock'):
-        with open('./log2.dat','a') as file:
-            np.savetxt(file,[2,time.time()])
-            file.flush()
     
     # Obtenemos la matriz de cambio de base a una en la que la parte cuadrática sea diagonal mediante la transformación de Bogoliubov.
     # También obtenemos los valores diagonales, las energías orbitales.
@@ -530,20 +484,14 @@ def minimize_function(H, function, betas,shots=None, layers=1, method=None):
     T =transformation_matrix
     # Obtener la matriz conjugada transpuesta para transformar operadores de destrucción
     T_conj=T
-    with FileLock('./log2.lock'):
-        with open('./log2.dat','a') as file:
-            np.savetxt(file,[3,time.time()])
-            file.flush()
+
     # T_conj = np.array(np.matrix(transformation_matrix).getH())
     # Transformamos el FermionicOp a la nueva base.
     fermionic_op_new = transform_fermionic_op(fermionic_op, T, T_conj)
 
     # Obtenemos los términos diagonales cuadráticos teniendo en cuenta lo que aporten a estos el cambio de base de los cuadráticos
     orbital_energies_fixed=np.array([np.real(fermionic_op_new['+_'+str(i)+' '+'-_'+str(i)]) for i in range(N_sites)])
-    with FileLock('./log2.lock'):
-        with open('./log2.dat','a') as file:
-            np.savetxt(file,[4,time.time()])
-            file.flush()
+
     # Dividimos por un factor las energías orbitales para evitar problemas numéricos.
     factor=1000
     omega=orbital_energies_fixed/factor
@@ -554,10 +502,7 @@ def minimize_function(H, function, betas,shots=None, layers=1, method=None):
     pauli_strings = qubit_op.paulis.to_labels()
     new_coeffs=np.real(coeffs)
     qubit_op=SparsePauliOp.from_list(list(zip(pauli_strings, new_coeffs))).simplify()
-    with FileLock('./log2.lock'):
-        with open('./log2.dat','a') as file:
-            np.savetxt(file,[5,time.time()])
-            file.flush()
+
     # Construimos el ansatz a partir de este operador.
     H_q=qubit_op/factor
     ansatz=ansatz_U(H_q,N_sites,reps=layers)
@@ -568,10 +513,7 @@ def minimize_function(H, function, betas,shots=None, layers=1, method=None):
     H_matrix = H_q.to_matrix()
     E_L, U_L = np.linalg.eigh(H_matrix)
     obs=SparsePauliOp.from_operator(H_q)
-    with FileLock('./log2.lock'):
-        with open('./log2.dat','a') as file:
-            np.savetxt(file,[6,time.time()])
-            file.flush()
+
     # Creamos un vector en el que vamos a guardar los valores de los overlaps y del número de iteraciones realizadas para cada valor de beta.
     overlaps_TFD = np.zeros(len(betas))
     niter=np.zeros(len(betas))
@@ -593,10 +535,6 @@ def minimize_function(H, function, betas,shots=None, layers=1, method=None):
     
         # Calculamos el TFD teórico
         TFD_exact = get_TFD(beta, U_L, np.conj(U_L), E_L)[0]
-        with FileLock('./log2.lock'):
-            with open('./log2.dat','a') as file:
-                np.savetxt(file,[7,time.time()])
-                file.flush()
         x0=np.zeros(0)
         for j in range(layers):
             x0i = np.random.random(gatesperlayer)*2*np.pi
@@ -607,10 +545,6 @@ def minimize_function(H, function, betas,shots=None, layers=1, method=None):
  
         # Realizamos la minimización de la función elegida como parámetro.
         min_result = minimize(function, x0=x0, args=(ansatz, beta, m, H_q, H_int_q, shots, sort_index), tol=1e-10, method=method, bounds=bnds, options={'maxiter':1000})
-        with FileLock('./log2.lock'):
-            with open('./log2.dat','a') as file:
-                np.savetxt(file,[17,time.time()])
-                file.flush()
         # Calculamos la matriz asociada al circuito unitario para los parámetros obtenidos de la minimización.
         U_bound = ansatz.assign_parameters(min_result.x)
         U_matrix = Operator(U_bound).data
@@ -648,10 +582,7 @@ def minimize_function(H, function, betas,shots=None, layers=1, method=None):
                 job = estimator.run(qclist[j][0],qclist[j][1])
                 # Las energías se corresponden con los valores del observable para cada circuito.
                 Energies[j]=job.result().values[0]
-        with FileLock('./log2.lock'):
-            with open('./log2.dat','a') as file:
-                np.savetxt(file,[18,time.time()])
-                file.flush()
+
         energ.append(Energies)
         
         TFD_opt = get_TFD(beta, U_matrix, np.conj(U_matrix), Energies)[0]
