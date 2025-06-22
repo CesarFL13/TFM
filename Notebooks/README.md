@@ -1,0 +1,1 @@
+Esta carpeta contiene algunos Jupyter Notebooks que se usaron al principio para probar que funcionaba correctamente el método, además de otros Notebooks de utilidad general, como el que comprueba que las energías no se entrelazan.
